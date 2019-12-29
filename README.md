@@ -16,10 +16,6 @@ processes cannot be trusted anymore.
 With this way the Linux and it related files are freely to update without
 breaking TPM's measurement.
 
-## Build from source
+## Dependencies
 
-Insall [xbuild](https://github.com/rust-osdev/cargo-xbuild) first. Then run:
-
-```sh
-cargo xbuild --target x86_64-unknown-uefi
-```
+- GNU-EFI

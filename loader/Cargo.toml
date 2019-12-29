@@ -1,9 +1,0 @@
-[package]
-name = "loader"
-version = "0.1.0"
-authors = ["Putta Khunchalee <ultimaweapon@outlook.com>"]
-edition = "2018"
-
-[dependencies]
-uefi = "0.4.1"
-uefi-services = "0.2.0"
