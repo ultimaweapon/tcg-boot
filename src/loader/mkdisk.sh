@@ -28,6 +28,10 @@ size=`parted -sm $image unit s print | awk 'NR == 3 { split($0, i, ":"); print i
 
 mformat -i $part1 -s 32 -h 64 -t $size -F
 
-# copy efi to disk image
+# copy efi and related files to disk image
+base=`dirname $efi`
+conf="$base/default.conf"
+
 mmd -i $part1 ::EFI ::EFI/boot
 mcopy -i $part1 $efi ::EFI/boot
+mcopy -i $part1 $conf ::EFI/boot/`basename $efi`.conf

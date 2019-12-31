@@ -22,7 +22,14 @@ bootx64_LINK = ./link.sh \
 	$@ \
 	$(efiarch)
 bootx64_SOURCES = \
-	main.c
+	config.c \
+	config.h \
+	image.c \
+	image.h \
+	main.c \
+	main.h \
+	path.c \
+	path.h
 
 clean-local:
 	rm -f *.so
