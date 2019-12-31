@@ -19,3 +19,12 @@ breaking TPM's measurement.
 ## Dependencies
 
 - GNU-EFI
+
+## Additional tools required for development
+
+- GNU Parted
+- Mtools
+- OVMF
+- QEMU
+
+It is required for development only, not building.
