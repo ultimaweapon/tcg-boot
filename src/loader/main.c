@@ -1,11 +1,9 @@
 #include <efi.h>
 #include <efilib.h>
 
-EFI_STATUS EFIAPI efi_main(
-	EFI_HANDLE ImageHandle,
-	EFI_SYSTEM_TABLE *SystemTable)
+EFI_STATUS efi_main(EFI_HANDLE img, EFI_SYSTEM_TABLE *st)
 {
-	InitializeLib(ImageHandle, SystemTable);
+	InitializeLib(img, st);
 	Print(L"Hello, world!\n");
 	return EFI_SUCCESS;
 }

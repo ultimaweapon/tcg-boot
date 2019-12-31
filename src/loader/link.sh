@@ -3,19 +3,24 @@ set -e
 
 # get arguments
 linker=$1
-output=$2
-arch=$3
+objcopy=$2
+output=$3
+arch=$4
 
-if [ "$linker" = "" ] || [ "$output" = "" ] || [ "$arch" = "" ]; then
-  echo "usage: $0 LINKER OUTPUT ARCH [ARG]..." >&2
+if test x$linker = x ||
+   test x$objcopy = x ||
+   test x$output = x ||
+   test x$arch = x; then
+  echo "usage: $0 LINKER OBJCOPY OUTPUT ARCH [ARG]..." >&2
   exit 1
 fi
 
-shift
-shift
-shift
+i=0; while test $i -lt 4; do
+  shift
+  i=$(( $i + 1 ))
+done
 
-intermediate="${output%.*}.so"
+intermediate="${output%.efi}.so"
 
 # invoke linker
 $linker -nostdlib \
@@ -27,18 +32,18 @@ $linker -nostdlib \
         "$@"
 
 # convert binary
-objcopy -j .text \
-        -j .sdata \
-        -j .data \
-        -j .dynamic \
-        -j .dynsym \
-        -j .rel \
-		    -j .rela \
-        -j '.rel.*' \
-        -j '.rela.*' \
-        -j '.rel*' \
-        -j '.rela*' \
-		    -j .reloc \
-        --target efi-app-$arch \
-        $intermediate \
-        $output
+$objcopy -j .text \
+         -j .sdata \
+         -j .data \
+         -j .dynamic \
+         -j .dynsym \
+         -j .rel \
+		     -j .rela \
+         -j '.rel.*' \
+         -j '.rela.*' \
+         -j '.rel*' \
+         -j '.rela*' \
+		     -j .reloc \
+         --target efi-app-$arch \
+         $intermediate \
+         $output
