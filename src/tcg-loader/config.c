@@ -8,10 +8,76 @@
 #include <efilib.h>
 
 #include <stdbool.h>
+#include <stddef.h>
 
-static bool parse(const char *data)
+static bool process(char *key, char *val, size_t line)
 {
 	return true;
+}
+
+static bool parse(char *data)
+{
+	char *next, *key;
+	size_t line;
+
+	key = NULL;
+	line = 1;
+
+	for (next = data;; next++) {
+		char ch = *next;
+		size_t len;
+
+		// move until we found a separator
+		switch (ch) {
+		case '=':
+			if (key) {
+				continue;
+			}
+		case '\n':
+		case 0:
+			break;
+		default:
+			continue;
+		}
+
+		len = next - data;
+
+		// process
+		if (!key && len) {
+			if (ch != '=') {
+				goto invalid;
+			}
+			key = data;
+			*next = 0;
+		} else if (!key && !len) {
+			if (ch == '=') {
+				// line begin with =
+				goto invalid;
+			}
+		} else {
+			*next = 0;
+			if (!process(key, data, line)) {
+				return false;
+			}
+			key = NULL;
+		}
+
+		// decide what to do next
+		if (!ch) {
+			break;
+		} else if (ch == '\n') {
+			line++;
+		}
+
+		data = next + 1;
+	}
+
+	return true;
+
+invalid:
+	Print(L"Invalid configuration at line %u\n", line);
+
+	return false;
 }
 
 static bool load(EFI_FILE_PROTOCOL *file)
@@ -112,14 +178,7 @@ bool config_init(void)
 	}
 
 	// open config file
-	es = uefi_call_wrapper(
-		vol->Open,
-		5,
-		vol,
-		&file,
-		path,
-		EFI_FILE_MODE_READ,
-		0);
+	es = vol->Open(vol, &file, path, EFI_FILE_MODE_READ, 0);
 
 	if (EFI_ERROR(es)) {
 		Print(L"Failed to open %s: %r\n", path, es);
@@ -130,14 +189,14 @@ bool config_init(void)
 	res = load(file);
 
 	// clean up
-	uefi_call_wrapper(file->Close, 1, file);
-	uefi_call_wrapper(vol->Close, 1, vol);
+	file->Close(file);
+	vol->Close(vol);
 	FreePool(path);
 
 	return res;
 
 fail_with_vol:
-	uefi_call_wrapper(vol->Close, 1, vol);
+	vol->Close(vol);
 
 fail:
 	FreePool(path);
