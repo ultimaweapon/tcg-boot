@@ -20,11 +20,45 @@ breaking TPM's measurement.
 
 - GNU-EFI
 
-## Additional tools required for development
+## Build
+
+If you are building from distribution tarball the steps to build will be the
+same as other software:
+
+```sh
+./configure
+make
+make install
+```
+
+Otherwise; you need GNU Autotools in addition to C toolchain to run the
+following command:
+
+```sh
+./autogen.sh
+```
+
+Then do the same steps as building from distribution tarball.
+
+## Development
+
+First, install the following tools:
 
 - GNU Parted
 - Mtools
 - OVMF
 - QEMU
 
-It is required for development only, not building.
+### Running TCG Loader in QEMU
+
+First, create a disk image with the following command:
+
+```sh
+./src/tcg-loader/mkdisk.sh disk.img 93750 src/tcg-loader/bootARCH.efi
+```
+
+Then, you can start QEMU with the following command:
+
+```sh
+qemu-system-ARCH -bios PATH_TO_OVMF.fd -drive file=disk.img
+```
