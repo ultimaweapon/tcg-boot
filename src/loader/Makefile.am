@@ -22,6 +22,7 @@ bootx64_LINK = ./link.sh \
 	$@ \
 	$(efiarch)
 bootx64_SOURCES = \
+	proto/tpm.h \
 	config.c \
 	config.h \
 	image.c \
