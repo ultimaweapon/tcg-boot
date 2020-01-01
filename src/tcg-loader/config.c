@@ -7,26 +7,78 @@
 #include <efi.h>
 #include <efilib.h>
 
-static int load(EFI_FILE_PROTOCOL *file)
+#include <stdbool.h>
+
+static bool parse(const char *data)
 {
-	return 0;
+	return true;
 }
 
-int config_init(void)
+static bool load(EFI_FILE_PROTOCOL *file)
+{
+	EFI_FILE_INFO *info;
+	UINTN size;
+	char *data;
+	EFI_STATUS es;
+	bool res;
+
+	// allocate buffer to read file
+	info = LibFileInfo(file);
+
+	if (!info) {
+		Print(L"Failed to allocate buffer for configuration file's info\n");
+		return false;
+	}
+
+	size = info->FileSize + 1;
+	FreePool(info);
+
+	data = AllocatePool(size);
+
+	if (!data) {
+		Print(L"Failed to allocate %u bytes\n", size);
+		return false;
+	}
+
+	// read file
+	es = file->Read(file, &size, data);
+
+	if (EFI_ERROR(es)) {
+		Print(L"Failed to read configuration file: %r\n", es);
+		goto fail;
+	}
+
+	data[size] = 0; // null terminate
+
+	// parse
+	res = parse(data);
+
+	// clean up
+	FreePool(data);
+
+	return res;
+
+fail:
+	FreePool(data);
+
+	return false;
+}
+
+bool config_init(void)
 {
 	EFI_LOADED_IMAGE_PROTOCOL *app;
 	CHAR16 *bin, *path;
 	UINTN ps;
 	EFI_FILE_PROTOCOL *vol, *file;
 	EFI_STATUS es;
-	int res;
+	bool res;
 
 	// get loaded image protocol
 	app = image_get_loaded(tcg);
 
 	if (!app) {
 		Print(L"Failed to get loaded image protocol for the application\n");
-		return 0;
+		return false;
 	}
 
 	// get configuration path
@@ -37,7 +89,7 @@ int config_init(void)
 			L"This application does not support device %x:%x\n",
 			app->FilePath->Type,
 			app->FilePath->SubType);
-		return 0;
+		return false;
 	}
 
 	ps = StrSize(bin) + sizeof(CHAR16) * 5; // size of '.conf'
@@ -45,7 +97,7 @@ int config_init(void)
 
 	if (!path) {
 		Print(L"Failed to allocate %u bytes\n", ps);
-		return 0;
+		return false;
 	}
 
 	StrCpy(path, bin);
@@ -90,7 +142,7 @@ fail_with_vol:
 fail:
 	FreePool(path);
 
-	return 0;
+	return false;
 }
 
 void config_term(void)
