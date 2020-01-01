@@ -1,5 +1,5 @@
-#ifndef TCGBOOT_LOADER_PROTO_TPM_H
-#define TCGBOOT_LOADER_PROTO_TPM_H
+#ifndef TCG_LOADER_PROTO_TPM_H
+#define TCG_LOADER_PROTO_TPM_H
 
 #include <efi.h>
 
@@ -106,4 +106,4 @@ typedef struct _EFI_TCG_PROTOCOL {
 	EFI_TCG_HASH_LOG_EXTEND_EVENT	HashLogExtendEvent;
 } EFI_TCG_PROTOCOL;
 
-#endif // TCGBOOT_LOADER_PROTO_TPM_H
+#endif // TCG_LOADER_PROTO_TPM_H

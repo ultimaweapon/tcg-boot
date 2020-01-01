@@ -15,7 +15,7 @@ AM_CONDITIONAL([X86_64], [test x$efiarch = xx86_64])
 AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
-	src/loader/Makefile
+	src/tcg-loader/Makefile
 ])
 
 AC_OUTPUT
