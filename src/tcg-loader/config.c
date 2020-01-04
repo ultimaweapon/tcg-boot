@@ -10,16 +10,87 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-static bool process(char *key, char *val, size_t line)
+static struct config conf;
+
+static void free(struct config *conf)
 {
+	FreePool(conf->kernel); conf->kernel = NULL;
+}
+
+static void print_duplicate(size_t line)
+{
+	Print(L"Duplicated configuration at line %u\n", line);
+}
+
+static bool parse_kernel(char *data, size_t line, struct config *conf)
+{
+	EFI_LOADED_IMAGE_PROTOCOL *app;
+	CHAR16 *path;
+
+	if (conf->kernel) {
+		print_duplicate(line);
+		return false;
+	}
+
+	if (!*data) {
+		Print(L"Invalid path name for kernel at line %u\n", line);
+		return false;
+	}
+
+	// get the loaded image protocol of the application to find the base path
+	// of the linux
+	app = image_get_loaded(tcg);
+
+	if (!app) {
+		Print(L"Failed to get loaded image protocol for the application\n");
+		return false;
+	}
+
+	// convert ascii path
+	path = PoolPrint(L"%a", data);
+
+	if (!path) {
+		Print(L"Failed to convert path %a\n");
+		return false;
+	}
+
+	// replace / with \.
+	for (CHAR16 *p = path; *p; p++) {
+		if (*p == '/') {
+			*p = '\\';
+		}
+	}
+
+	// get full path
+	conf->kernel = FileDevicePath(app->DeviceHandle, path);
+	FreePool(path);
+
+	if (!conf->kernel) {
+		Print(L"Failed to get device path for %a\n", data);
+		return false;
+	}
+
 	return true;
 }
 
-static bool parse(char *data)
+static bool process(char *key, char *val, size_t line, struct config *conf)
+{
+	if (strcmpa(key, "kernel") == 0) {
+		return parse_kernel(val, line, conf);
+	} else {
+		Print(L"Unknow configuration '%a' at line %u\n", key, line);
+		return false;
+	}
+
+	return true;
+}
+
+static bool parse(char *data, struct config *conf)
 {
 	char *next, *key;
 	size_t line;
 
+	// parse
 	key = NULL;
 	line = 1;
 
@@ -56,7 +127,7 @@ static bool parse(char *data)
 			}
 		} else {
 			*next = 0;
-			if (!process(key, data, line)) {
+			if (!process(key, data, line, conf)) {
 				return false;
 			}
 			key = NULL;
@@ -117,10 +188,13 @@ static bool load(EFI_FILE_PROTOCOL *file)
 	data[size] = 0; // null terminate
 
 	// parse
-	res = parse(data);
-
-	// clean up
+	free(&conf);
+	res = parse(data, &conf);
 	FreePool(data);
+
+	if (!res) {
+		free(&conf);
+	}
 
 	return res;
 
@@ -206,4 +280,5 @@ fail:
 
 void config_term(void)
 {
+	free(&conf);
 }
