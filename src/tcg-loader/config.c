@@ -282,3 +282,8 @@ void config_term(void)
 {
 	free(&conf);
 }
+
+const struct config * config_get(void)
+{
+	return &conf;
+}
