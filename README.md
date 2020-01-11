@@ -54,11 +54,11 @@ First, install the following tools:
 First, create a disk image with the following command:
 
 ```sh
-./src/tcg-loader/mkdisk.sh disk.img 93750 src/tcg-loader/bootARCH.efi
+./src/tcg-loader/mkdisk.sh src/tcg-loader/bootx64.efi PATH_TO_KERNEL disk.img
 ```
 
 Then, you can start QEMU with the following command:
 
 ```sh
-qemu-system-ARCH -bios PATH_TO_OVMF.fd -drive file=disk.img
+qemu-system-ARCH -bios PATH_TO_OVMF.fd -drive file=disk.img -nographic
 ```

@@ -2,14 +2,24 @@
 set -e
 
 # get arguments
-image=$1
-sectors=$2
-efi=$3
+efi=$1
+kernel=$2
+image=$3
+sectors=$4
 
-if test x"$image" = x"" || test x"$sectors" = x"" || test x"$efi" = x""; then
-  echo "usage: $0 IMAGE SECTORS EFI" >&2
+if test x"$efi" = x"" ||
+   test x"$kernel" = x"" ||
+   test x"$image" = x""; then
+  echo "usage: $0 EFI KERNEL IMAGE [SECTORS]" >&2
   exit 1
-elif test $sectors -lt 93750; then
+fi
+
+if test x"$sectors" = x""; then
+  # TODO: calculate required sectors from total file's size
+  sectors=93750
+fi
+
+if test $sectors -lt 93750; then
   echo "minimum sectors count is 93750" >&2
   exit 1
 fi
@@ -35,3 +45,4 @@ conf="$base/default.conf"
 mmd -i $part1 ::EFI ::EFI/boot
 mcopy -i $part1 $efi ::EFI/boot
 mcopy -i $part1 $conf ::EFI/boot/`basename $efi`.conf
+mcopy -i $part1 $kernel ::vmlinuz
