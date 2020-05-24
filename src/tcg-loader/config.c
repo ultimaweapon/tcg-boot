@@ -14,7 +14,14 @@ static struct config conf;
 
 static void free(struct config *conf)
 {
-	FreePool(conf->kernel); conf->kernel = NULL;
+	for (size_t i = 0; i < conf->initrd.count; i++) {
+		FreePool(conf->initrd.paths[i]);
+	}
+
+	FreePool(conf->kernel);
+	FreePool(conf->initrd.paths);
+
+	ZeroMem(conf, sizeof(*conf));
 }
 
 static void print_duplicate(size_t line)
@@ -22,19 +29,15 @@ static void print_duplicate(size_t line)
 	Print(L"Duplicated configuration at line %u\n", line);
 }
 
-static bool parse_kernel(char *data, size_t line, struct config *conf)
+static EFI_DEVICE_PATH_PROTOCOL * parse_path(const char *path, size_t line)
 {
 	EFI_LOADED_IMAGE_PROTOCOL *app;
-	CHAR16 *path;
+	CHAR16 *unicode;
+	EFI_DEVICE_PATH_PROTOCOL *protocol;
 
-	if (conf->kernel) {
-		print_duplicate(line);
-		return false;
-	}
-
-	if (!*data) {
-		Print(L"Invalid path name for kernel at line %u\n", line);
-		return false;
+	if (!*path) {
+		Print(L"Invalid path name at line %u\n", line);
+		return NULL;
 	}
 
 	// get the loaded image protocol of the application to find the base path
@@ -43,32 +46,74 @@ static bool parse_kernel(char *data, size_t line, struct config *conf)
 
 	if (!app) {
 		Print(L"Failed to get loaded image protocol for the application\n");
-		return false;
+		return NULL;
 	}
 
-	// convert ascii path
-	path = PoolPrint(L"%a", data);
+	// convert ascii path to native path
+	unicode = PoolPrint(L"%a", path);
 
-	if (!path) {
-		Print(L"Failed to convert path %a\n");
-		return false;
+	if (!unicode) {
+		Print(L"Failed to convert path %a to the unicode string\n", path);
+		return NULL;
 	}
 
-	// replace / with \.
-	for (CHAR16 *p = path; *p; p++) {
+	// replace forward slash with back slash
+	for (CHAR16 *p = unicode; *p; p++) {
 		if (*p == '/') {
 			*p = '\\';
 		}
 	}
 
 	// get full path
-	conf->kernel = FileDevicePath(app->DeviceHandle, path);
-	FreePool(path);
+	protocol = FileDevicePath(app->DeviceHandle, unicode);
+	FreePool(unicode);
 
-	if (!conf->kernel) {
-		Print(L"Failed to get device path for %a\n", data);
+	if (!protocol) {
+		Print(L"Failed to get device path for %a\n", path);
+		return NULL;
+	}
+
+	return protocol;
+}
+
+static bool parse_kernel(char *val, size_t line, struct config *conf)
+{
+	if (conf->kernel) {
+		print_duplicate(line);
 		return false;
 	}
+
+	conf->kernel = parse_path(val, line);
+
+	return conf->kernel ? true : false;
+}
+
+static bool parse_initrd(char *val, size_t line, struct config *conf)
+{
+	EFI_DEVICE_PATH_PROTOCOL *path;
+	size_t size;
+
+	// convert local path to device path
+	path = parse_path(val, line);
+
+	if (!path) {
+		return false;
+	}
+
+	// put to the end of the list
+	size = sizeof(*conf->initrd.paths) * conf->initrd.count;
+	conf->initrd.paths = ReallocatePool(
+		conf->initrd.paths,
+		size,
+		size + sizeof(*conf->initrd.paths));
+
+	if (!conf->initrd.paths) {
+		Print(L"Failed grow an array for a new item at line %u\n", line);
+		FreePool(path);
+		return false;
+	}
+
+	conf->initrd.paths[conf->initrd.count++] = path;
 
 	return true;
 }
@@ -77,6 +122,8 @@ static bool process(char *key, char *val, size_t line, struct config *conf)
 {
 	if (strcmpa(key, "kernel") == 0) {
 		return parse_kernel(val, line, conf);
+	} else if (strcmpa(key, "initrd") == 0) {
+		return parse_initrd(val, line, conf);
 	} else {
 		Print(L"Unknow configuration '%a' at line %u\n", key, line);
 		return false;
