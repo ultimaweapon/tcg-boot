@@ -8,6 +8,7 @@
 
 struct config {
 	EFI_DEVICE_PATH_PROTOCOL *kernel;
+	char *command_line;
 	struct {
 		EFI_DEVICE_PATH_PROTOCOL **paths;
 		size_t count;

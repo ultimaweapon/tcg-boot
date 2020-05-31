@@ -19,6 +19,7 @@ static void free(struct config *conf)
 	}
 
 	FreePool(conf->kernel);
+	FreePool(conf->command_line);
 	FreePool(conf->initrd.paths);
 
 	ZeroMem(conf, sizeof(*conf));
@@ -88,6 +89,28 @@ static bool parse_kernel(char *val, size_t line, struct config *conf)
 	return conf->kernel ? true : false;
 }
 
+static bool parse_command_line(char *val, size_t line, struct config *conf)
+{
+	UINTN size;
+
+	if (conf->command_line) {
+		print_duplicate(line);
+		return false;
+	}
+
+	size = strlena(val) + 1;
+	conf->command_line = AllocatePool(size);
+
+	if (!conf->command_line) {
+		Print(L"Failed to allocate %u bytes for the value at line %u\n", size, line);
+		return false;
+	}
+
+	CopyMem(conf->command_line, val, size);
+
+	return true;
+}
+
 static bool parse_initrd(char *val, size_t line, struct config *conf)
 {
 	EFI_DEVICE_PATH_PROTOCOL *path;
@@ -122,6 +145,8 @@ static bool process(char *key, char *val, size_t line, struct config *conf)
 {
 	if (strcmpa(key, "kernel") == 0) {
 		return parse_kernel(val, line, conf);
+	} else if (strcmpa(key, "command_line") == 0) {
+		return parse_command_line(val, line, conf);
 	} else if (strcmpa(key, "initrd") == 0) {
 		return parse_initrd(val, line, conf);
 	} else {
