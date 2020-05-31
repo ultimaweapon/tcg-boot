@@ -19,6 +19,7 @@ breaking TPM's measurement.
 ## Dependencies
 
 - GNU-EFI
+- Kernel User-space API headers (UAPI)
 
 ## Build
 
@@ -62,3 +63,5 @@ Then, you can start QEMU with the following command:
 ```sh
 qemu-system-ARCH -bios PATH_TO_OVMF.fd -drive file=disk.img -nographic
 ```
+
+To terminate QEMU, press `CTRL + A` then `X`.
