@@ -64,4 +64,4 @@ Then, you can start QEMU with the following command:
 qemu-system-ARCH -bios PATH_TO_OVMF.fd -drive file=disk.img -nographic
 ```
 
-To terminate QEMU, press `CTRL + A` then `X`.
+To terminate QEMU, press <kbd>Ctrl</kbd> + <kbd>A</kdb> then <kbd>X</kdb>.
