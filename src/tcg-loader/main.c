@@ -10,7 +10,9 @@
 
 EFI_HANDLE tcg;
 
-static EFI_PHYSICAL_ADDRESS load_linux(UINTN *pages)
+static
+EFI_PHYSICAL_ADDRESS
+load_linux(UINTN *pages)
 {
 	const struct config *conf = config_get();
 	EFI_PHYSICAL_ADDRESS addr;
@@ -103,7 +105,9 @@ end:
 	return addr;
 }
 
-static void boot_linux(void)
+static
+void
+boot_linux(void)
 {
 	const struct config *conf = config_get();
 	unsigned char *kernel;
@@ -152,7 +156,8 @@ fail_with_kernel:
 	}
 }
 
-EFI_STATUS efi_main(EFI_HANDLE img, EFI_SYSTEM_TABLE *st)
+EFI_STATUS
+efi_main(EFI_HANDLE img, EFI_SYSTEM_TABLE *st)
 {
 	// initialize libraries
 	InitializeLib(img, st);
