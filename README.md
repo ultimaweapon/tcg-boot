@@ -50,18 +50,42 @@ First, install the following tools:
 - OVMF
 - QEMU
 
-### Running TCG Loader in QEMU
+### Create a Linux VM
 
-First, create a disk image with the following command:
-
-```sh
-./src/tcg-loader/mkdisk.sh src/tcg-loader/bootx64.efi PATH_TO_KERNEL disk.img
-```
-
-Then, you can start QEMU with the following command:
+Prepare an installation media for any distros you like. The only requirements is
+it must supports UEFI. Then create a directory for keeping files that related to
+the VM. Copy `OVMF_VARS.fd` from the current system to that directory. Then
+switch to that directory and create a disk image with the following command:
 
 ```sh
-qemu-system-ARCH -bios PATH_TO_OVMF.fd -drive file=disk.img -nographic
+dd if=/dev/zero of=disk1.img count=SECTORS status=progress
 ```
 
-To terminate QEMU, press <kbd>Ctrl</kbd> + <kbd>A</kbd> then <kbd>X</kbd>.
+Replaces `SECTORS` with the number you want. 1 sector is equals to 512 bytes.
+When finished you can start a VM with the following command:
+
+```sh
+qemu-system-x86_64 -enable-kvm -cpu host -m 1G -machine q35 -drive if=pflash,format=raw,readonly,file=OVMF_CODE -drive if=pflash,format=raw,file=OVMF_VARS.fd -drive if=virtio,format=raw,file=disk1.img -cdrom MEDIA
+```
+
+Replaces `OVMF_CODE` with a full path of `OVMF_CODE.fd` and `MEDIA` with a full
+path of the installation media. Things to be careful durring installation:
+
+- The kernel and its initial ramdisk must be installed to EFI system partition.
+- The current utility scripts does not supports more than one `fat32` partitions
+so don't create multiple of it.
+- You don't need to install boot loader.
+- You need to create an empty directory `EFI/boot` in the EFI system partition
+before shutdown or reboot.
+
+### Install TCG Loader into VM
+
+Prepare a configuration that matched with your VM by duplicating
+`src/tcg-loader/default.conf`. Then run the following command:
+
+```sh
+./install-img.sh PATH_TO_IMAGE src/tcg-loader/bootx64.efi PATH_TO_CONFIG
+```
+
+Now you can start the VM to test TCG Loader. You may need to change bios
+settings in order to boot TCG Loader.
