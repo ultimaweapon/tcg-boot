@@ -8,21 +8,49 @@
 #include <efi.h>
 #include <efilib.h>
 
+struct allocated_pages {
+	UINTN count;
+	unsigned char *start;
+};
+
 EFI_HANDLE tcg;
 
 static
-EFI_PHYSICAL_ADDRESS
-load_linux(UINTN *pages)
+void
+free_pages(struct allocated_pages *p)
+{
+	EFI_STATUS es;
+
+	if (!p->count) {
+		return;
+	}
+
+	es = BS->FreePages((EFI_PHYSICAL_ADDRESS)p->start, p->count);
+
+	if (EFI_ERROR(es)) {
+		Print(
+			L"Failed to free %u pages starting at %lX: %r\n",
+			p->count,
+			p->start,
+			es);
+		return;
+	}
+
+	ZeroMem(p, sizeof(*p));
+}
+
+static
+bool
+load_linux(struct allocated_pages *res)
 {
 	const struct config *conf = config_get();
-	EFI_PHYSICAL_ADDRESS addr;
+	bool success = false;
 	EFI_DEVICE_PATH_PROTOCOL *path;
 	EFI_FILE_PROTOCOL *root, *file;
 	EFI_STATUS es;
 	EFI_FILE_INFO *info;
+	EFI_PHYSICAL_ADDRESS addr;
 	UINTN size;
-
-	addr = 0;
 
 	// open volume that contain kernel
 	path = conf->kernel;
@@ -54,42 +82,35 @@ load_linux(UINTN *pages)
 	}
 
 	// load kernel
-	*pages = EFI_SIZE_TO_PAGES(info->FileSize);
+	res->count = EFI_SIZE_TO_PAGES(info->FileSize);
+	addr = 0xFFFFFFFF;
 
 	es = BS->AllocatePages(
-		AllocateAnyPages,
+		AllocateMaxAddress,
 		EfiLoaderData,
-		*pages,
+		res->count,
 		&addr);
 
 	if (EFI_ERROR(es)) {
 		Print(
 			L"Failed to allocate %u pages for %D: %r\n",
-			*pages,
+			res->count,
 			conf->kernel,
 			es);
-		addr = 0;
 		goto end_with_info;
 	}
 
+	res->start = (unsigned char *)addr;
 	size = info->FileSize;
-	es = file->Read(file, &size, (VOID *)addr);
+	es = file->Read(file, &size, res->start);
 
 	if (EFI_ERROR(es)) {
 		Print(L"Failed to read %D: %r\n", conf->kernel, es);
-
-		es = BS->FreePages(addr, *pages);
-
-		if (EFI_ERROR(es)) {
-			Print(
-				L"Failed to free %u pages starting at %lX: %r\n",
-				*pages,
-				addr,
-				es);
-		}
-
-		addr = 0;
+		free_pages(res);
+		goto end_with_info;
 	}
+
+	success = true;
 
 	// clean up
 end_with_info:
@@ -102,7 +123,7 @@ end_with_root:
 	root->Close(root);
 
 end:
-	return addr;
+	return success;
 }
 
 static
@@ -110,50 +131,40 @@ void
 boot_linux(void)
 {
 	const struct config *conf = config_get();
-	unsigned char *kernel;
-	UINTN pages, nheader;
+	struct allocated_pages kernel;
 	struct boot_params *params;
 	EFI_STATUS es;
 
 	// load kernel into memory
-	kernel = (unsigned char *)load_linux(&pages);
-
-	if (!kernel) {
+	if (!load_linux(&kernel)) {
 		return;
 	}
 
-	if (CompareMem(kernel + 0x202, "HdrS", 4)) {
+	if (CompareMem(kernel.start + 0x202, "HdrS", 4)) {
 		Print(L"%D is not a Linux kernel or it is too old\n", conf->kernel);
 		goto fail_with_kernel;
 	}
 
 	// prepare parameters
-	params = AllocateZeroPool(sizeof(struct boot_params));
+	params = AllocateZeroPool(sizeof(*params));
 
 	if (!params) {
 		Print(
 			L"Failed to allocate %u bytes for boot parameters\n",
-			sizeof(struct boot_params));
+			sizeof(*params));
 		goto fail_with_kernel;
 	}
 
-	nheader = (0x0202 + kernel[0x0201]) - 0x01F1;
-
-	CopyMem(&params->hdr, kernel + 0x01F1, nheader);
+	CopyMem(
+		&params->hdr,
+		kernel.start + 0x01F1,
+		(0x0202 + kernel.start[0x0201]) - 0x01F1);
 
 	// clean up
 	FreePool(params);
 
 fail_with_kernel:
-	es = BS->FreePages((EFI_PHYSICAL_ADDRESS)kernel, pages);
-
-	if (EFI_ERROR(es)) {
-		Print(
-			L"Failed to free %u pages starting at %lX: %r\n",
-			pages,
-			kernel,
-			es);
-	}
+	free_pages(&kernel);
 }
 
 EFI_STATUS
