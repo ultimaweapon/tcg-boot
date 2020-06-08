@@ -2,6 +2,7 @@
 *.o
 *.so
 .deps/
+.dirstamp
 /.vscode/
 /aclocal.m4
 /autom4te.cache/

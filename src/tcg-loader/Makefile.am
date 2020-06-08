@@ -22,13 +22,18 @@ bootx64_LINK = ./link.sh \
 	$@ \
 	$(efiarch)
 bootx64_SOURCES = \
+	arch/x86/linux.c \
 	proto/tpm.h \
 	config.c \
 	config.h \
 	image.c \
 	image.h \
+	linux.c \
+	linux.h \
 	main.c \
 	main.h \
+	page.c \
+	page.h \
 	path.c \
 	path.h
 
