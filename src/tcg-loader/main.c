@@ -14,18 +14,19 @@ void
 boot_linux(void)
 {
 	struct page_alloc kernel, initrd;
+	size_t rdsize;
 
 	// load kernel and initrd
 	if (!linux_kernel_load(&kernel)) {
 		return;
 	}
 
-	if (!linux_initrd_load(&initrd)) {
+	if (!linux_initrd_load(&initrd, &rdsize)) {
 		goto fail_with_kernel;
 	}
 
 	// boot
-	linux_boot(kernel.addr, initrd.addr);
+	linux_boot(kernel.addr, initrd.addr, rdsize);
 
 	// clean up
 	page_free(&initrd);

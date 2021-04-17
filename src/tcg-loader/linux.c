@@ -112,7 +112,7 @@ end:
 }
 
 bool
-linux_initrd_load(struct page_alloc *result)
+linux_initrd_load(struct page_alloc *result, size_t *len)
 {
 	const struct config *conf = config_get();
 	bool success = false;
@@ -122,12 +122,11 @@ linux_initrd_load(struct page_alloc *result)
 		EFI_FILE_INFO *info;
 	} *files;
 	EFI_STATUS es;
-	unsigned char *p;
-
-	ZeroMem(result, sizeof(*result));
 
 	// prepare to load all initrd
 	if (!conf->initrd.count) {
+		ZeroMem(result, sizeof(*result));
+		*len = 0;
 		return true;
 	}
 
@@ -182,6 +181,8 @@ linux_initrd_load(struct page_alloc *result)
 
 	// allocate pages for all initrd
 	if (!size) {
+		ZeroMem(result, sizeof(*result));
+		*len = 0;
 		success = true;
 		goto end_with_files;
 	}
@@ -203,20 +204,20 @@ linux_initrd_load(struct page_alloc *result)
 	}
 
 	// load all initrd
-	p = result->addr;
+	*len = 0;
 
 	for (size_t i = 0; i < conf->initrd.count; i++) {
 		struct opened_file *file = &files[i];
 
 		size = file->info->FileSize;
-		es = file->file->Read(file->file, &size, p);
+		es = file->file->Read(file->file, &size, result->addr + *len);
 
 		if (EFI_ERROR(es)) {
 			Print(L"Failed to read %D: %r\n", conf->initrd.paths[i], es);
 			goto end_with_result;
 		}
 
-		p += size;
+		*len += size;
 	}
 
 	success = true;
