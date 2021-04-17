@@ -109,5 +109,5 @@ TCGBOOT_OVMF_CODE=PATH_TO_OVMF_CODE ./vm/start.sh
 ```
 
 You may need to change bios settings in order to boot TCG Loader. If there is
-something wrong and you can terminate the VM with <kbd>Ctrl</kbd> + <kbd>A</kbd>
+something wrong you can terminate the VM with <kbd>Ctrl</kbd> + <kbd>A</kbd>
 then <kbd>X</kbd>.
