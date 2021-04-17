@@ -13,5 +13,7 @@
 /depcomp
 /install-sh
 /missing
+/vm/bios/OVMF_VARS.fd
+/vm/disk1.img
 Makefile
 Makefile.in

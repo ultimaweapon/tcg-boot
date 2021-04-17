@@ -1,12 +1,13 @@
 #!/bin/sh -e
-image=$1
-loader=$2
-config=$3
+loader=$1
+config=$2
 
-if test x"$image" = x"" || test x"$loader" = x"" || test x"$config" = x""; then
-  echo "usage: $0 IMAGE LOADER CONFIG" >&2
+if test x"$loader" = x"" || test x"$config" = x""; then
+  echo "usage: $0 LOADER CONFIG" >&2
   exit 1
 fi
+
+image="vm/disk1.img"
 
 # find esp partition
 offset=$(parted -sm "$image" unit B print | awk 'NR >= 3 { split($0, i, ":"); if (i[5] == "fat32") print i[2]; }')

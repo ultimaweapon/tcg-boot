@@ -53,23 +53,38 @@ First, install the following tools:
 ### Create a Linux VM
 
 Prepare an installation media for any distros you like. The only requirements is
-it must supports UEFI. Then create a directory for keeping files that related to
-the VM. Copy `OVMF_VARS.fd` from the current system to that directory. Then
-switch to that directory and create a disk image with the following command:
+it must supports UEFI.
+
+#### Disable Copy-on-write on BTRFS
+
+If you are using BTRFS and Copy-on-write is enabled you should disable it on
+`vm` directory with the following command:
 
 ```sh
-dd if=/dev/zero of=disk1.img count=SECTORS status=progress
+chattr +C vm
+```
+
+#### Create a disk image
+
+```sh
+dd if=/dev/zero of=vm/disk1.img count=SECTORS status=progress
 ```
 
 Replaces `SECTORS` with the number you want. 1 sector is equals to 512 bytes.
-When finished you can start a VM with the following command:
+The size of the image depend on your distro.
+
+#### Install distro
+
+Copy `OVMF_VARS.fd` from your current system to `vm/bios`. Then start an
+installation with the following command:
 
 ```sh
-qemu-system-x86_64 -enable-kvm -cpu host -m 1G -machine q35 -drive if=pflash,format=raw,readonly,file=OVMF_CODE -drive if=pflash,format=raw,file=OVMF_VARS.fd -drive if=virtio,format=raw,file=disk1.img -cdrom MEDIA
+TCGBOOT_OVMF_CODE=PATH_TO_OVMF_CODE ./vm/start.sh -cdrom MEDIA
 ```
 
-Replaces `OVMF_CODE` with a full path of `OVMF_CODE.fd` and `MEDIA` with a full
-path of the installation media. Things to be careful durring installation:
+Replaces `PATH_TO_OVMF_CODE` with a full path of `OVMF_CODE.fd` and `MEDIA` with
+a full path of the installation media. Things to be careful durring
+installation:
 
 - The kernel and its initial ramdisk must be installed to EFI system partition.
 - The current utility scripts does not supports more than one `fat32` partitions
@@ -80,12 +95,19 @@ before shutdown or reboot.
 
 ### Install TCG Loader into VM
 
-Prepare a configuration that matched with your VM by duplicating
+Prepare a configuration that matched with the VM by duplicating
 `src/tcg-loader/default.conf`. Then run the following command:
 
 ```sh
-./install-img.sh PATH_TO_IMAGE src/tcg-loader/bootx64.efi PATH_TO_CONFIG
+./install-img.sh src/tcg-loader/bootx64.efi PATH_TO_CONFIG
 ```
 
-Now you can start the VM to test TCG Loader. You may need to change bios
-settings in order to boot TCG Loader.
+Now you can start the VM to test TCG Loader:
+
+```sh
+TCGBOOT_OVMF_CODE=PATH_TO_OVMF_CODE ./vm/start.sh
+```
+
+You may need to change bios settings in order to boot TCG Loader. If there is
+something wrong and you can terminate the VM with <kbd>Ctrl</kbd> + <kbd>A</kbd>
+then <kbd>X</kbd>.
