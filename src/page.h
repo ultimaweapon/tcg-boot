@@ -1,7 +1,6 @@
-#ifndef TCG_LOADER_PAGE_H
-#define TCG_LOADER_PAGE_H
+#pragma once
 
-#include <efi.h>
+#include <efi/efi.h>
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -14,5 +13,3 @@ struct page_alloc {
 
 bool page_alloc(EFI_ALLOCATE_TYPE loc, struct page_alloc *info);
 void page_free(struct page_alloc *page);
-
-#endif // TCG_LOADER_PAGE_H

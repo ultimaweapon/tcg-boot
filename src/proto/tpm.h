@@ -1,7 +1,6 @@
-#ifndef TCG_LOADER_PROTO_TPM_H
-#define TCG_LOADER_PROTO_TPM_H
+#pragma once
 
-#include <efi.h>
+#include <efi/efi.h>
 
 // all of definitions taken from
 // https://trustedcomputinggroup.org/resource/tcg-efi-protocol-specification/
@@ -105,5 +104,3 @@ typedef struct _EFI_TCG_PROTOCOL {
 	EFI_TCG_PASS_THROUGH_TO_TPM		PassThroughToTPM;
 	EFI_TCG_HASH_LOG_EXTEND_EVENT	HashLogExtendEvent;
 } EFI_TCG_PROTOCOL;
-
-#endif // TCG_LOADER_PROTO_TPM_H

@@ -3,8 +3,8 @@
 #include "../../config.h"
 #include "../../main.h"
 
-#include <efi.h>
-#include <efilib.h>
+#include <efi/efi.h>
+#include <efi/efilib.h>
 
 #include <asm/bootparam.h>
 

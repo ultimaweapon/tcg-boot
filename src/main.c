@@ -4,8 +4,8 @@
 #include "linux.h"
 #include "page.h"
 
-#include <efi.h>
-#include <efilib.h>
+#include <efi/efi.h>
+#include <efi/efilib.h>
 
 EFI_HANDLE tcg;
 
@@ -38,9 +38,6 @@ fail_with_kernel:
 EFI_STATUS
 efi_main(EFI_HANDLE img, EFI_SYSTEM_TABLE *st)
 {
-	// initialize libraries
-	InitializeLib(img, st);
-
 	// initialize sub-modules
 	tcg = img;
 

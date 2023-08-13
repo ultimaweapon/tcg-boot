@@ -4,8 +4,8 @@
 #include "main.h"
 #include "path.h"
 
-#include <efi.h>
-#include <efilib.h>
+#include <efi/efi.h>
+#include <efi/efilib.h>
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -102,7 +102,10 @@ static bool parse_command_line(char *val, size_t line, struct config *conf)
 	conf->command_line = AllocatePool(size);
 
 	if (!conf->command_line) {
-		Print(L"Failed to allocate %u bytes for the value at line %u\n", size, line);
+		Print(
+			L"Failed to allocate %u bytes for the value at line %u\n",
+			size,
+			line);
 		return false;
 	}
 

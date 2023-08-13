@@ -2,7 +2,7 @@
 
 #include "main.h"
 
-#include <efilib.h>
+#include <efi/efilib.h>
 
 void * path_get_device_protocol(
 	EFI_DEVICE_PATH_PROTOCOL **path,

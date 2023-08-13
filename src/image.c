@@ -2,7 +2,7 @@
 
 #include "main.h"
 
-#include <efilib.h>
+#include <efi/efilib.h>
 
 EFI_LOADED_IMAGE_PROTOCOL * image_get_loaded(EFI_HANDLE img)
 {

@@ -1,12 +1,6 @@
 #!/bin/sh -e
-loader=$1
-config=$2
-
-if test x"$loader" = x"" || test x"$config" = x""; then
-  echo "usage: $0 LOADER CONFIG" >&2
-  exit 1
-fi
-
+loader="bootx64.efi"
+config="vm/tcg.conf"
 image="vm/disk1.img"
 
 # find esp partition
@@ -21,4 +15,4 @@ esp="${image}@@${offset%?}"
 
 # copy a loader and related files to the disk image
 mcopy -o -i "$esp" "$loader" ::EFI/boot
-mcopy -o -i "$esp" "$config" ::EFI/boot/$(basename "$loader").conf
+mcopy -o -i "$esp" "$config" ::EFI/boot/bootx64.efi.conf

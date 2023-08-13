@@ -4,8 +4,8 @@
 #include "page.h"
 #include "path.h"
 
-#include <efi.h>
-#include <efilib.h>
+#include <efi/efi.h>
+#include <efi/efilib.h>
 
 #include <stdbool.h>
 #include <stddef.h>

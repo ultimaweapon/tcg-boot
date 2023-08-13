@@ -1,7 +1,6 @@
-#ifndef TCG_LOADER_CONFIG_H
-#define TCG_LOADER_CONFIG_H
+#pragma once
 
-#include <efi.h>
+#include <efi/efi.h>
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -19,5 +18,3 @@ bool config_init(void);
 void config_term(void);
 
 const struct config * config_get(void);
-
-#endif // TCG_LOADER_CONFIG_H

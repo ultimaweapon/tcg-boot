@@ -1,7 +1,7 @@
 #include "page.h"
 
-#include <efi.h>
-#include <efilib.h>
+#include <efi/efi.h>
+#include <efi/efilib.h>
 
 bool
 page_alloc(EFI_ALLOCATE_TYPE loc, struct page_alloc *info)
