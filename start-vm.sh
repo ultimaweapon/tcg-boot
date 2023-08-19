@@ -9,6 +9,6 @@ exec qemu-system-x86_64 \
   -m 1G \
   -machine q35 \
   -drive if=pflash,format=raw,readonly=on,file="$TCGBOOT_OVMF_CODE" \
-  -drive if=pflash,format=raw,file="$dir/bios/OVMF_VARS.fd" \
-  -drive if=virtio,format=raw,file="$dir/disk1.img" \
+  -drive if=pflash,format=raw,file="$dir/vm/bios/OVMF_VARS.fd" \
+  -drive if=virtio,format=raw,file="$dir/vm/disk1.img" \
   "$@"
