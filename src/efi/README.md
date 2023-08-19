@@ -4,8 +4,10 @@ ZFI is a Rust crate for writing a UEFI application with the following goals:
 
 - Provides the APIs that are almost identical to the UEFI specifications.
 - Most APIs are zero-cost abstraction over UEFI API.
-- Safe.
+- Safe and easy to use.
 - Work on stable Rust.
+
+ZFI supports only a single-thread environment, which is the same as UEFI specifications.
 
 ## Example
 

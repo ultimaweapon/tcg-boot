@@ -1,9 +1,10 @@
-use crate::efi::{EfiChar, EfiStr, EfiString, File, Status};
+use crate::efi::{EfiChar, EfiStr, EfiString, File, Owned, Status};
 use alloc::borrow::{Cow, ToOwned};
 use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::fmt::{Display, Formatter};
+use core::str::{from_utf8, FromStr};
 
 /// User-provided configurations for TCG Loader.
 pub struct Config {
@@ -13,7 +14,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn load(file: &File) -> Result<Self, LoadError> {
+    pub fn load(mut file: Owned<File>) -> Result<Self, LoadError> {
         // Get file size.
         let info = match file.info() {
             Ok(v) => v,
@@ -101,10 +102,17 @@ impl Config {
     }
 
     fn parse(&mut self, key: &[u8], val: &[u8], line: usize) -> Result<(), LoadError> {
+        // Get the value.
+        let val = match from_utf8(val) {
+            Ok(v) => v,
+            Err(_) => return Err(LoadError::UnsupportedChar(line)),
+        };
+
+        // Parse the value.
         match key {
-            b"kernel" => self.kernel = Cow::Owned(Self::parse_path(val)),
-            b"command_line" => self.command_line = core::str::from_utf8(val).unwrap().to_owned(),
-            b"initrd" => self.initrd.push(Self::parse_path(val)),
+            b"kernel" => self.kernel = Cow::Owned(Self::parse_path(val, line)?),
+            b"command_line" => self.command_line = val.to_owned(),
+            b"initrd" => self.initrd.push(Self::parse_path(val, line)?),
             v => {
                 return Err(LoadError::UnknownKey(
                     String::from_utf8_lossy(v).into_owned(),
@@ -116,17 +124,20 @@ impl Config {
         Ok(())
     }
 
-    fn parse_path(val: &[u8]) -> EfiString {
+    fn parse_path(val: &str, line: usize) -> Result<EfiString, LoadError> {
         // Replace any / with \.
-        let mut path = EfiString::from_bytes(val).unwrap();
+        let mut path = match EfiString::from_str(val) {
+            Ok(v) => v,
+            Err(_) => return Err(LoadError::UnsupportedChar(line)),
+        };
 
         for ch in &mut path {
             if *ch == b'/' {
-                *ch = unsafe { EfiChar::from_u8_unchecked(b'\\') };
+                *ch = EfiChar::REVERSE_SOLIDUS;
             }
         }
 
-        path
+        Ok(path)
     }
 }
 
@@ -136,6 +147,7 @@ pub enum LoadError {
     ReadFileFailed(Status),
     SyntaxError(usize),
     UnknownKey(String, usize),
+    UnsupportedChar(usize),
 }
 
 impl Display for LoadError {
@@ -145,6 +157,7 @@ impl Display for LoadError {
             Self::ReadFileFailed(e) => write!(f, "cannot read the file -> {e}"),
             Self::SyntaxError(l) => write!(f, "syntax error at line {l}"),
             Self::UnknownKey(k, l) => write!(f, "unknown configuration '{k}' at line {l}"),
+            Self::UnsupportedChar(l) => write!(f, "unsupported character at line {l}"),
         }
     }
 }

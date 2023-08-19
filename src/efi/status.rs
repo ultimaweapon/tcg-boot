@@ -20,6 +20,14 @@ impl Status {
     const fn error(v: usize) -> Self {
         Self(0x8000000000000000 | v)
     }
+
+    pub fn err_or<T>(self, success: T) -> Result<T, Self> {
+        if self == Self::SUCCESS {
+            Ok(success)
+        } else {
+            Err(self)
+        }
+    }
 }
 
 impl Display for Status {

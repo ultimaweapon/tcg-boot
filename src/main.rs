@@ -3,8 +3,11 @@
 
 use self::boot::boot;
 use self::config::Config;
-use self::efi::{pause, FileAttributes, FileModes, Image, PathNode, Status, SystemTable};
+use self::efi::{
+    pause, DebugFile, FileAttributes, FileModes, Image, PathNode, Status, SystemTable,
+};
 use alloc::borrow::ToOwned;
+use alloc::boxed::Box;
 use alloc::vec::Vec;
 
 mod boot;
@@ -16,7 +19,13 @@ extern crate alloc;
 #[no_mangle]
 extern "efiapi" fn efi_main(image: &'static Image, st: &'static SystemTable) -> Status {
     // SAFETY: This is safe because we do it as the first thing here.
-    unsafe { crate::efi::init(image, st) };
+    unsafe {
+        crate::efi::init(
+            image,
+            st,
+            Some(|| Box::new(DebugFile::next_to_image("log").unwrap())),
+        )
+    };
 
     let status = main(image);
 
@@ -35,7 +44,7 @@ fn main(image: &'static Image) -> Status {
         PathNode::MediaFilePath(v) => v.to_owned(),
     };
 
-    path.push_str(".conf");
+    path.push_str(".conf").unwrap();
 
     // Get filesystem of the volume that contains our image.
     let fs = match image.device().file_system() {
@@ -67,7 +76,7 @@ fn main(image: &'static Image) -> Status {
     };
 
     // Load the config.
-    let config = match Config::load(&config) {
+    let config = match Config::load(config) {
         Ok(v) => v,
         Err(e) => {
             eprintln!("Cannot load {path}: {e}.");
@@ -119,7 +128,7 @@ fn main(image: &'static Image) -> Status {
     };
 
     // Boot.
-    boot(&kernel, &initrds, cmd_line)
+    boot(kernel, initrds, cmd_line)
 }
 
 #[cfg(not(test))]

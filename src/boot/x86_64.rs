@@ -1,6 +1,6 @@
 use crate::efi::{
     allocate_pages, get_memory_map, page_count, AllocateType, EfiString, File, MemoryDescriptor,
-    MemoryType, Status, SystemTable,
+    MemoryType, Owned, Status, SystemTable,
 };
 use crate::eprintln;
 use alloc::borrow::ToOwned;
@@ -9,13 +9,9 @@ use alloc::vec::Vec;
 use core::arch::asm;
 use core::cmp::min;
 use core::mem::{size_of, transmute, zeroed};
-use core::ops::Deref;
 use core::ptr::copy_nonoverlapping;
 
-pub fn boot<I>(image: &File, initrds: &[I], cmd_line: &str) -> Status
-where
-    I: Deref<Target = File>,
-{
+pub fn boot(mut image: Owned<File>, initrds: Vec<Owned<File>>, cmd_line: &str) -> Status {
     // Allocate page for the kernel.
     let info = image.info().unwrap();
     let size = info.file_size().try_into().unwrap();
@@ -69,8 +65,8 @@ where
 
     // Get total size of initrd.
     let mut total = 0;
-    let initrds: Vec<(&I, EfiString, usize)> = initrds
-        .iter()
+    let initrds: Vec<(Owned<File>, EfiString, usize)> = initrds
+        .into_iter()
         .map(|initrd| {
             let info = initrd.info().unwrap();
             let size: usize = info.file_size().try_into().unwrap();
@@ -95,7 +91,7 @@ where
     // Load all initrd.
     let mut off = 0;
 
-    for (i, n, s) in initrds {
+    for (mut i, n, s) in initrds {
         match i.read(&mut initrd[off..]) {
             Ok(v) => assert_eq!(v, s),
             Err(e) => {

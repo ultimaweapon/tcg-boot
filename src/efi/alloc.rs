@@ -1,7 +1,7 @@
 use super::{AllocateType, MemoryType, Status, SystemTable, PAGE_SIZE};
 use alloc::boxed::Box;
 use core::alloc::{GlobalAlloc, Layout};
-use core::mem::{size_of, transmute};
+use core::mem::size_of;
 use core::ops::{Deref, DerefMut};
 use core::ptr::{null_mut, read_unaligned, write_unaligned};
 
@@ -62,16 +62,16 @@ impl DerefMut for Pages {
 
 /// Encapsulate an object that need to be free by some mechanism.
 pub struct Owned<T> {
-    ptr: *const T,
-    dtor: Option<Box<dyn FnOnce(*const T)>>,
+    ptr: *mut T,
+    dtor: Option<Box<dyn FnOnce(*mut T)>>,
 }
 
 impl<T> Owned<T> {
     /// # Safety
     /// `ptr` must be valid.
-    pub unsafe fn new<D>(ptr: *const T, dtor: D) -> Self
+    pub unsafe fn new<D>(ptr: *mut T, dtor: D) -> Self
     where
-        D: FnOnce(*const T) + 'static,
+        D: FnOnce(*mut T) + 'static,
     {
         Self {
             ptr,
@@ -90,14 +90,25 @@ impl<T> Deref for Owned<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        // SAFETY: This is safe because the rule in [`new()`].
-        unsafe { transmute(self.ptr) }
+        unsafe { &*self.ptr }
+    }
+}
+
+impl<T> DerefMut for Owned<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { &mut *self.ptr }
     }
 }
 
 impl<T> AsRef<T> for Owned<T> {
     fn as_ref(&self) -> &T {
         &self
+    }
+}
+
+impl<T> AsMut<T> for Owned<T> {
+    fn as_mut(&mut self) -> &mut T {
+        self
     }
 }
 

@@ -10,6 +10,7 @@ use core::ptr::read_unaligned;
 
 /// Represents one or more `EFI_DEVICE_PATH_PROTOCOL`.
 #[repr(C)]
+#[derive(Debug)]
 pub struct Path {
     ty: u8,
     sub: u8,
