@@ -4,8 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bitflags = "2.4"
-zfi = { path = "zfi" }
-
-[workspace]
-members = ["zfi"]
+zfi = "0.1"
