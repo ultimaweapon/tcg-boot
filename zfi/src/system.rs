@@ -1,4 +1,4 @@
-use crate::{BootServices, RuntimeServices, SimpleTextInput, SimpleTextOutput, TableHeader};
+use crate::{BootServices, RuntimeServices, SimpleTextInput, SimpleTextOutput, TableHeader, ST};
 
 /// Represents an `EFI_SYSTEM_TABLE`.
 #[repr(C)]
@@ -18,8 +18,8 @@ pub struct SystemTable {
 
 impl SystemTable {
     pub fn current() -> &'static SystemTable {
-        // SAFETY: This is safe because we mark set_current() as unsafe.
-        unsafe { CURRENT.unwrap() }
+        // SAFETY: This is safe because the only place that write ST is our init function.
+        unsafe { ST.unwrap() }
     }
 
     pub fn hdr(&self) -> &TableHeader {
@@ -45,10 +45,4 @@ impl SystemTable {
         // SAFETY: This is safe because we mark ExitBootServices() as unsafe.
         unsafe { &*self.boot_services }
     }
-
-    pub(super) unsafe fn set_current(v: &'static SystemTable) {
-        CURRENT = Some(v);
-    }
 }
-
-static mut CURRENT: Option<&'static SystemTable> = None;

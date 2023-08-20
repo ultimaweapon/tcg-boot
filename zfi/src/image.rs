@@ -1,4 +1,4 @@
-use crate::{Device, Guid, OpenProtocolAttributes, Path, SystemTable};
+use crate::{Device, Guid, OpenProtocolAttributes, Path, SystemTable, IMAGE};
 use core::mem::transmute;
 use core::ptr::null;
 
@@ -7,8 +7,8 @@ pub struct Image(());
 
 impl Image {
     pub fn current() -> &'static Self {
-        // SAFETY: This is safe because the rule that we applied to set_current().
-        unsafe { CURRENT.unwrap() }
+        // SAFETY: This is safe because the only place that write IMAGE is our init function.
+        unsafe { IMAGE.unwrap() }
     }
 
     /// Gets the `EFI_LOADED_IMAGE_PROTOCOL` from this image.
@@ -34,10 +34,6 @@ impl Image {
         };
 
         unsafe { transmute(proto) }
-    }
-
-    pub(super) unsafe fn set_current(v: &'static Self) {
-        CURRENT = Some(v);
     }
 }
 
@@ -68,5 +64,3 @@ impl LoadedImage {
         self.image_base
     }
 }
-
-static mut CURRENT: Option<&Image> = None;

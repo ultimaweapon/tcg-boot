@@ -46,6 +46,10 @@ mod time;
 
 extern crate alloc;
 
+pub(crate) static mut ST: Option<&SystemTable> = None;
+pub(crate) static mut IMAGE: Option<&Image> = None;
+pub(crate) static mut DEBUG_WRITER: Option<RefCell<Box<dyn Write>>> = None;
+
 /// Initializes the ZFI.
 ///
 /// This must be called before using any ZFI API. Usually you should call this right away as the
@@ -59,8 +63,8 @@ pub unsafe fn init(
     debug_writer: Option<fn() -> Box<dyn Write>>,
 ) {
     // Initialize foundation.
-    SystemTable::set_current(st);
-    Image::set_current(im);
+    ST = Some(st);
+    IMAGE = Some(im);
 
     // Check EFI version.
     if st.hdr().revision() < TableRevision::new(1, 1) {
@@ -69,6 +73,6 @@ pub unsafe fn init(
 
     // Initialize debug log.
     if let Some(f) = debug_writer {
-        self::debug::DEBUG_WRITER = Some(RefCell::new(f()));
+        DEBUG_WRITER = Some(RefCell::new(f()));
     }
 }

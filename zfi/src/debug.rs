@@ -1,5 +1,6 @@
 use crate::{
-    EfiChar, EfiString, File, FileAttributes, FileCreateError, Image, Owned, Path, PathNode, Status,
+    EfiChar, EfiString, File, FileAttributes, FileCreateError, Image, Owned, Path, PathNode,
+    Status, DEBUG_WRITER,
 };
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
@@ -99,5 +100,3 @@ impl Display for DebugFileError {
         }
     }
 }
-
-pub(super) static mut DEBUG_WRITER: Option<RefCell<Box<dyn Write>>> = None;
