@@ -7,8 +7,8 @@ use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 use zfi::{
-    eprintln, pause, println, DebugFile, FileAttributes, FileModes, Image, PathNode, Status,
-    SystemTable,
+    debugln, eprintln, pause, println, DebugFile, FileAttributes, FileModes, Image, PathNode,
+    Status, SystemTable,
 };
 
 mod boot;
@@ -27,6 +27,10 @@ extern "efiapi" fn efi_main(image: &'static Image, st: &'static SystemTable) -> 
         )
     };
 
+    // Log application version.
+    debugln!("TCG Loader v{}", env!("CARGO_PKG_VERSION"));
+
+    // Run.
     let status = main(image);
 
     if status != Status::SUCCESS {
