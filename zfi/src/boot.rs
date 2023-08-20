@@ -140,8 +140,8 @@ impl BootServices {
 
     /// # Safety
     /// `mem` must be allocated by [`allocate_pool()`].
-    pub unsafe fn free_pool(&self, mem: *mut u8) {
-        (self.free_pool)(mem);
+    pub unsafe fn free_pool(&self, mem: *mut u8) -> Result<(), Status> {
+        (self.free_pool)(mem).err_or(())
     }
 
     /// Stops execution until an event is signaled.

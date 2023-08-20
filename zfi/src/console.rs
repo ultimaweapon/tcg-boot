@@ -1,33 +1,32 @@
-use crate::{Event, Status, SystemTable};
+use crate::{EfiStr, Event, Status, SystemTable};
 use alloc::vec::Vec;
+use core::fmt::Write;
 
 /// Prints to the standard output, with a newline.
 #[macro_export]
 macro_rules! println {
-    ($($arg:tt)*) => {{
-        use $crate::print;
-        use ::alloc::string::String;
+    ($($args:tt)*) => {{
+        use $crate::SystemTable;
         use ::core::fmt::Write;
 
-        let mut buf = String::new();
-        write!(buf, $($arg)*).unwrap();
-        write!(buf, "\r\n").unwrap();
-        print(buf);
+        let mut dev = SystemTable::current().stdout();
+
+        dev.write_fmt(::core::format_args!($($args)*)).unwrap();
+        dev.write_eol().unwrap();
     }};
 }
 
 /// Prints to the standard error, with a newline.
 #[macro_export]
 macro_rules! eprintln {
-    ($($arg:tt)*) => {{
-        use $crate::eprint;
-        use ::alloc::string::String;
+    ($($args:tt)*) => {{
+        use $crate::SystemTable;
         use ::core::fmt::Write;
 
-        let mut buf = String::new();
-        write!(buf, $($arg)*).unwrap();
-        write!(buf, "\r\n").unwrap();
-        eprint(buf);
+        let mut dev = SystemTable::current().stderr();
+
+        dev.write_fmt(::core::format_args!($($args)*)).unwrap();
+        dev.write_eol().unwrap();
     }};
 }
 
@@ -37,27 +36,7 @@ pub fn pause() {
     let bs = st.boot_services();
     let stdin = st.stdin();
 
-    bs.wait_for_event(&[stdin.key_event()]).unwrap();
-}
-
-/// Prints to the standard output.
-pub fn print<S: AsRef<str>>(s: S) {
-    print_to(s, SystemTable::current().stdout());
-}
-
-/// Prints to the standard error.
-pub fn eprint<S: AsRef<str>>(s: S) {
-    print_to(s, SystemTable::current().stderr());
-}
-
-fn print_to<S: AsRef<str>>(s: S, d: &SimpleTextOutput) {
-    // Get UTF-16.
-    let mut s: Vec<u16> = s.as_ref().encode_utf16().collect();
-
-    s.push(0); // null-terminate.
-
-    // SAFETY: This is safe because s has null-terminated by the above statement.
-    unsafe { d.write(s.as_ptr()).unwrap() };
+    bs.wait_for_event(&[stdin.wait_for_key]).unwrap();
 }
 
 /// Represents an `EFI_SIMPLE_TEXT_INPUT_PROTOCOL`.
@@ -68,12 +47,6 @@ pub struct SimpleTextInput {
     wait_for_key: Event,
 }
 
-impl SimpleTextInput {
-    pub fn key_event(&self) -> Event {
-        self.wait_for_key
-    }
-}
-
 /// Represents an `EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL`.
 #[repr(C)]
 pub struct SimpleTextOutput {
@@ -82,15 +55,72 @@ pub struct SimpleTextOutput {
 }
 
 impl SimpleTextOutput {
-    /// # Safety
-    /// `s` must be null-terminated.
-    pub unsafe fn write(&self, s: *const u16) -> Result<(), Status> {
-        let s = (self.output_string)(self, s);
+    pub fn write_eol(&self) -> Result<(), Status> {
+        let eol = [0x0D, 0x0A, 0x00];
 
-        if s != Status::SUCCESS {
-            Err(s)
-        } else {
+        // SAFETY: This is safe because eol has NUL at the end.
+        unsafe { (self.output_string)(self, eol.as_ptr()).err_or(()) }
+    }
+
+    pub fn output_string(&self, s: &EfiStr) -> Result<(), Status> {
+        // SAFETY: This is safe because EfiStr has NUL at the end.
+        unsafe { (self.output_string)(self, s.as_ptr()).err_or(()) }
+    }
+}
+
+impl Write for &SimpleTextOutput {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        // Encode Rust string to UCS-2.
+        let mut buf = Vec::with_capacity(s.len() + 1);
+        let mut prev = 0;
+
+        for c in s.encode_utf16() {
+            match c {
+                0x0000 | 0xD800..=0xDFFF => return Err(core::fmt::Error),
+                0x000A => {
+                    // Prepend \r before \n if required.
+                    if prev != 0x000D {
+                        buf.push(0x000D);
+                    }
+                }
+                _ => {}
+            }
+
+            buf.push(c);
+            prev = c;
+        }
+
+        buf.push(0);
+
+        // SAFETY: This is safe because we just push NUL at the end by the above statement.
+        let status = unsafe { (self.output_string)(self, buf.as_ptr()) };
+
+        if status.is_success() {
             Ok(())
+        } else {
+            Err(core::fmt::Error)
+        }
+    }
+
+    fn write_char(&mut self, c: char) -> core::fmt::Result {
+        // Encode to UCS-2 (not UTF-16).
+        let mut buf = [0; 2];
+
+        match c {
+            '\0' | '\u{10000}'.. => return Err(core::fmt::Error),
+            c => c.encode_utf16(&mut buf),
+        };
+
+        assert_eq!(buf[1], 0);
+
+        // SAFETY: This is safe because we just ensure the second element is NUL by the above
+        // statement.
+        let status = unsafe { (self.output_string)(self, buf.as_ptr()) };
+
+        if status.is_success() {
+            Ok(())
+        } else {
+            Err(core::fmt::Error)
         }
     }
 }

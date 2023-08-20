@@ -19,14 +19,14 @@ impl EfiStr {
     ///
     /// - NUL-terminated.
     /// - Not have any NULs in the middle.
-    /// - Valid UCS-2.
+    /// - Valid UCS-2 (not UTF-16).
     pub const unsafe fn new_unchecked(data: &[u16]) -> &Self {
         // SAFETY: This is safe because EfiStr is #[repr(transparent)].
         &*(data as *const [u16] as *const Self)
     }
 
     /// # Safety
-    /// `ptr` must be a valid UCS-2 and NUL-terminated.
+    /// `ptr` must be a valid UCS-2 (not UTF-16) and NUL-terminated.
     pub unsafe fn from_ptr<'a>(ptr: *const u16) -> &'a Self {
         let mut len = 0;
 

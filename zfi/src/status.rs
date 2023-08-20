@@ -3,6 +3,7 @@ use core::fmt::{Display, Formatter};
 /// Represents an `EFI_STATUS`.
 #[repr(transparent)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[must_use]
 pub struct Status(usize);
 
 impl Status {
@@ -27,6 +28,10 @@ impl Status {
         } else {
             Err(self)
         }
+    }
+
+    pub fn is_success(self) -> bool {
+        self == Self::SUCCESS
     }
 }
 
