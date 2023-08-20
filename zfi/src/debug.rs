@@ -11,7 +11,7 @@ use core::fmt::{Display, Formatter, Write};
 #[macro_export]
 macro_rules! debugln {
     ($($args:tt)*) => {
-        if let Some(w) = $crate::efi::debug_writer() {
+        if let Some(w) = $crate::debug_writer() {
             let mut w = w.borrow_mut();
 
             w.write_fmt(::core::format_args!($($args)*)).unwrap();
@@ -69,11 +69,10 @@ impl DebugFile {
 
 impl Write for DebugFile {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
-        if self.file.write(s.as_bytes()).is_err() {
-            Err(core::fmt::Error)
-        } else {
-            Ok(())
-        }
+        self.file
+            .write(s.as_bytes())
+            .and_then(|_| self.file.flush())
+            .map_err(|_| core::fmt::Error)
     }
 }
 

@@ -54,6 +54,7 @@ pub struct File {
     set_position: extern "efiapi" fn(&Self, u64) -> Status,
     get_info: unsafe extern "efiapi" fn(&Self, *const Guid, *mut usize, *mut u8) -> Status,
     set_info: unsafe extern "efiapi" fn(&Self, *const Guid, usize, *const u8) -> Status,
+    flush: extern "efiapi" fn(&Self) -> Status,
 }
 
 impl File {
@@ -213,6 +214,11 @@ impl File {
         } else {
             Ok(())
         }
+    }
+
+    /// Flushes all modified data associated with a file to a device.
+    pub fn flush(&mut self) -> Result<(), Status> {
+        (self.flush)(self).err_or(())
     }
 
     fn dtor(f: *mut Self) {
