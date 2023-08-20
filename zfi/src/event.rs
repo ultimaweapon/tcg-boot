@@ -1,4 +1,6 @@
 /// Represents an `EFI_EVENT`.
+///
+/// The reason this type is not exposed is because it is likely to be changing in the future.
 #[repr(transparent)]
 #[derive(Clone, Copy)]
-pub struct Event(usize);
+pub(crate) struct Event(usize);

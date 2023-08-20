@@ -5,7 +5,6 @@ pub use self::boot::*;
 pub use self::console::*;
 pub use self::debug::*;
 pub use self::device::*;
-pub use self::event::*;
 pub use self::filesystem::*;
 pub use self::guid::*;
 pub use self::header::*;

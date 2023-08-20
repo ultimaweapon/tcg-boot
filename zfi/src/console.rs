@@ -1,4 +1,5 @@
-use crate::{EfiStr, Event, Status, SystemTable};
+use crate::event::Event;
+use crate::{EfiStr, Status, SystemTable};
 use alloc::vec::Vec;
 use core::fmt::Write;
 

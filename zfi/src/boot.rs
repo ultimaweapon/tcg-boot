@@ -1,4 +1,5 @@
-use crate::{Device, Event, Guid, Image, Pages, Path, Status, TableHeader, PAGE_SIZE};
+use crate::event::Event;
+use crate::{Device, Guid, Image, Pages, Path, Status, TableHeader, PAGE_SIZE};
 use alloc::vec::Vec;
 use bitflags::bitflags;
 use core::mem::{size_of, transmute};
@@ -145,7 +146,7 @@ impl BootServices {
     }
 
     /// Stops execution until an event is signaled.
-    pub fn wait_for_event(&self, events: &[Event]) -> Result<usize, Status> {
+    pub(crate) fn wait_for_event(&self, events: &[Event]) -> Result<usize, Status> {
         let mut index = 0;
         let status = unsafe { (self.wait_for_event)(events.len(), events.as_ptr(), &mut index) };
 
