@@ -1,4 +1,4 @@
-use super::{
+use crate::{
     EfiChar, EfiString, File, FileAttributes, FileCreateError, Image, Owned, Path, PathNode, Status,
 };
 use alloc::borrow::ToOwned;

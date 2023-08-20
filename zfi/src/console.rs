@@ -1,11 +1,11 @@
-use super::{Event, Status, SystemTable};
+use crate::{Event, Status, SystemTable};
 use alloc::vec::Vec;
 
 /// Prints to the standard output, with a newline.
 #[macro_export]
 macro_rules! println {
     ($($arg:tt)*) => {{
-        use $crate::efi::print;
+        use $crate::print;
         use ::alloc::string::String;
         use ::core::fmt::Write;
 
@@ -20,7 +20,7 @@ macro_rules! println {
 #[macro_export]
 macro_rules! eprintln {
     ($($arg:tt)*) => {{
-        use $crate::efi::eprint;
+        use $crate::eprint;
         use ::alloc::string::String;
         use ::core::fmt::Write;
 

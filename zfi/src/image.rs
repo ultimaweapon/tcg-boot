@@ -1,5 +1,4 @@
-use super::{Device, Guid, Path, SystemTable};
-use crate::efi::OpenProtocolAttributes;
+use crate::{Device, Guid, OpenProtocolAttributes, Path, SystemTable};
 use core::mem::transmute;
 use core::ptr::null;
 

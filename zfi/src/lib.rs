@@ -1,15 +1,18 @@
-pub use self::alloc::*;
+#![no_std]
+
+pub use self::allocator::*;
 pub use self::boot::*;
 pub use self::console::*;
 pub use self::debug::*;
 pub use self::device::*;
 pub use self::event::*;
-pub use self::fs::*;
+pub use self::filesystem::*;
 pub use self::guid::*;
 pub use self::header::*;
 pub use self::image::*;
 pub use self::memory::*;
 pub use self::path::*;
+pub use self::pointer::*;
 pub use self::proto::*;
 pub use self::runtime::*;
 pub use self::status::*;
@@ -17,27 +20,31 @@ pub use self::string::*;
 pub use self::system::*;
 pub use self::time::*;
 
+use alloc::boxed::Box;
 use core::cell::RefCell;
 use core::fmt::Write;
 
-mod alloc;
+mod allocator;
 mod boot;
 mod console;
 mod debug;
 mod device;
 mod event;
-mod fs;
+mod filesystem;
 mod guid;
 mod header;
 mod image;
 mod memory;
 mod path;
+mod pointer;
 mod proto;
 mod runtime;
 mod status;
 mod string;
 mod system;
 mod time;
+
+extern crate alloc;
 
 /// Initializes the ZFI.
 ///
@@ -49,7 +56,7 @@ mod time;
 pub unsafe fn init(
     im: &'static Image,
     st: &'static SystemTable,
-    debug_writer: Option<fn() -> ::alloc::boxed::Box<dyn Write>>,
+    debug_writer: Option<fn() -> Box<dyn Write>>,
 ) {
     // Initialize foundation.
     SystemTable::set_current(st);

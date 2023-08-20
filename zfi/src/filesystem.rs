@@ -1,4 +1,4 @@
-use super::{EfiStr, Guid, Owned, Status, Time};
+use crate::{EfiStr, Guid, Owned, Status, Time};
 use alloc::alloc::{alloc, dealloc, handle_alloc_error};
 use bitflags::bitflags;
 use core::alloc::Layout;

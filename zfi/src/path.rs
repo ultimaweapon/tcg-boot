@@ -1,4 +1,4 @@
-use super::EfiStr;
+use crate::EfiStr;
 use alloc::borrow::ToOwned;
 use alloc::vec::Vec;
 use core::borrow::Borrow;

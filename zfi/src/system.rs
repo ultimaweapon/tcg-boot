@@ -1,4 +1,4 @@
-use super::{BootServices, RuntimeServices, SimpleTextInput, SimpleTextOutput, TableHeader};
+use crate::{BootServices, RuntimeServices, SimpleTextInput, SimpleTextOutput, TableHeader};
 
 /// Represents an `EFI_SYSTEM_TABLE`.
 #[repr(C)]

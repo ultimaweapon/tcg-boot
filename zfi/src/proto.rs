@@ -1,4 +1,4 @@
-use super::{Guid, OpenProtocolAttributes, Status, SystemTable};
+use crate::{Guid, OpenProtocolAttributes, Status, SystemTable};
 
 /// # Safety
 /// This function don't check anything so the caller is responsible to make sure all arguments is

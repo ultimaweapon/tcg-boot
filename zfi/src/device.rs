@@ -1,4 +1,4 @@
-use super::{get_protocol, Guid, Path, SimpleFileSystem, Status, SystemTable};
+use crate::{get_protocol, Guid, Path, SimpleFileSystem, Status, SystemTable};
 use core::mem::transmute;
 
 /// Represents an `EFI_HANDLE` for a device.

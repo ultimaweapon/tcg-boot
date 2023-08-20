@@ -3,16 +3,16 @@
 
 use self::boot::boot;
 use self::config::Config;
-use self::efi::{
-    pause, DebugFile, FileAttributes, FileModes, Image, PathNode, Status, SystemTable,
-};
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
+use zfi::{
+    eprintln, pause, println, DebugFile, FileAttributes, FileModes, Image, PathNode, Status,
+    SystemTable,
+};
 
 mod boot;
 mod config;
-mod efi;
 
 extern crate alloc;
 
@@ -20,7 +20,7 @@ extern crate alloc;
 extern "efiapi" fn efi_main(image: &'static Image, st: &'static SystemTable) -> Status {
     // SAFETY: This is safe because we do it as the first thing here.
     unsafe {
-        crate::efi::init(
+        zfi::init(
             image,
             st,
             Some(|| Box::new(DebugFile::next_to_image("log").unwrap())),
@@ -140,4 +140,4 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 
 #[cfg(not(test))]
 #[global_allocator]
-static ALLOCATOR: efi::PoolAllocator = efi::PoolAllocator;
+static ALLOCATOR: zfi::PoolAllocator = zfi::PoolAllocator;

@@ -1,10 +1,10 @@
-use crate::efi::{EfiChar, EfiStr, EfiString, File, Owned, Status};
 use alloc::borrow::{Cow, ToOwned};
 use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::fmt::{Display, Formatter};
 use core::str::{from_utf8, FromStr};
+use zfi::{EfiChar, EfiStr, EfiString, File, Owned, Status};
 
 /// User-provided configurations for TCG Loader.
 pub struct Config {

@@ -1,8 +1,3 @@
-use crate::efi::{
-    allocate_pages, get_memory_map, page_count, AllocateType, EfiString, File, MemoryDescriptor,
-    MemoryType, Owned, Status, SystemTable,
-};
-use crate::eprintln;
 use alloc::borrow::ToOwned;
 use alloc::ffi::CString;
 use alloc::vec::Vec;
@@ -10,6 +5,10 @@ use core::arch::asm;
 use core::cmp::min;
 use core::mem::{size_of, transmute, zeroed};
 use core::ptr::copy_nonoverlapping;
+use zfi::{
+    allocate_pages, eprintln, get_memory_map, page_count, AllocateType, EfiString, File,
+    MemoryDescriptor, MemoryType, Owned, Status, SystemTable,
+};
 
 pub fn boot(mut image: Owned<File>, initrds: Vec<Owned<File>>, cmd_line: &str) -> Status {
     // Allocate page for the kernel.

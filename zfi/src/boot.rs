@@ -1,4 +1,4 @@
-use super::{Device, Event, Guid, Image, Pages, Path, Status, TableHeader, PAGE_SIZE};
+use crate::{Device, Event, Guid, Image, Pages, Path, Status, TableHeader, PAGE_SIZE};
 use alloc::vec::Vec;
 use bitflags::bitflags;
 use core::mem::{size_of, transmute};
