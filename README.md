@@ -82,7 +82,7 @@ TCGBOOT_OVMF_CODE=PATH_TO_OVMF_CODE ./start-vm.sh -cdrom MEDIA
 ```
 
 Replaces `PATH_TO_OVMF_CODE` with a full path of `OVMF_CODE.fd` and `MEDIA` with a full path of the
-installation media. Things to be careful durring installation:
+installation media. Things to be careful during installation:
 
 - The kernel and its initial ramdisk must be installed to EFI system partition.
 - The current utility scripts does not supports more than one `fat32` partitions so don't create
@@ -112,5 +112,5 @@ TCGBOOT_OVMF_CODE=PATH_TO_OVMF_CODE ./start-vm.sh
 ```
 
 You may need to change bios settings in order to boot TCG Loader. You can append `-nographic`
-ptions to `start-vm.sh` to output the QEMU console directly to your terminal. To exit the QEMU,
+options to `start-vm.sh` to output the QEMU console directly to your terminal. To exit the QEMU,
 press <kbd>Ctrl</kbd> + <kbd>A</kbd> then <kbd>X</kbd>.
